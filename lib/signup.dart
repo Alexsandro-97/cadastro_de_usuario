@@ -34,6 +34,59 @@ class _SignUpState extends State<SignUp> {
           ),
         ],
       ),
+      body: ListView(
+        padding: const EdgeInsets.all(12.0),
+        children: [
+          TextField(
+            decoration: buildInputDecoration(Strings.userName),
+            textInputAction: TextInputAction.next,
+            autofocus: true,
+          ),
+          const SizedBox(height: 10.0),
+          TextField(
+            decoration: buildInputDecoration(Strings.email),
+            textInputAction: TextInputAction.next,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 10.0),
+          TextField(
+            decoration: buildInputDecoration(Strings.password).copyWith(
+                suffixIcon: IconButton(
+              icon: Icon(obscureText ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() {
+                obscureText = !obscureText;
+              }),
+            )),
+            textInputAction: TextInputAction.next,
+            obscureText: obscureText,
+          ),
+          const SizedBox(height: 10.0),
+          TextField(
+            decoration: buildInputDecoration(Strings.fullName),
+            textInputAction: TextInputAction.next,
+          ),
+          const SizedBox(height: 10.0),
+          TextField(
+            decoration: buildInputDecoration(Strings.birthDate),
+            textInputAction: TextInputAction.next,
+            keyboardType: TextInputType.number,
+          ),
+          const SizedBox(height: 10.0),
+          TextField(
+            decoration: buildInputDecoration(Strings.phone),
+            textInputAction: TextInputAction.next,
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 10.0),
+        ],
+      ),
+    );
+  }
+
+  InputDecoration buildInputDecoration(String label) {
+    return InputDecoration(
+      border: const OutlineInputBorder(),
+      labelText: label,
     );
   }
 }
