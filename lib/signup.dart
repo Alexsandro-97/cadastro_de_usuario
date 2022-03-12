@@ -15,6 +15,50 @@ class SignUp extends StatefulWidget {
 
 class _SignUpState extends State<SignUp> {
   bool obscureText = true;
+  DateTime? selectedBirthDate;
+
+  final birthDateController = TextEditingController();
+
+  void showBirthDatePicker() {
+    final now = DateTime.now();
+    final olderAge = DateTime(now.year - 18, now.month, now.day);
+    showDatePicker(
+      context: context,
+      firstDate: DateTime(1900),
+      initialDate: selectedBirthDate ?? olderAge,
+      lastDate: olderAge,
+      initialEntryMode: DatePickerEntryMode.calendarOnly,
+      initialDatePickerMode: DatePickerMode.year,
+    ).then((selectedDate) {
+      if (selectedDate != null) {
+        selectedBirthDate = selectedDate;
+        birthDateController.text =
+            '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}';
+      }
+    });
+  }
+
+  void showSignUpDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(Strings.appName),
+          content: const Text(Strings.confirmationMessage),
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Não'),
+            ),
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('Sim'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,18 +110,36 @@ class _SignUpState extends State<SignUp> {
             textInputAction: TextInputAction.next,
           ),
           const SizedBox(height: 10.0),
-          TextField(
-            decoration: buildInputDecoration(Strings.birthDate),
-            textInputAction: TextInputAction.next,
-            keyboardType: TextInputType.number,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 6,
+                child: TextField(
+                  controller: birthDateController,
+                  readOnly: true,
+                  decoration: buildInputDecoration(Strings.birthDate),
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.number,
+                  onTap: showBirthDatePicker,
+                ),
+              ),
+              const SizedBox(width: 10.0),
+              Expanded(
+                flex: 5,
+                child: TextField(
+                  decoration: buildInputDecoration(Strings.phone),
+                  textInputAction: TextInputAction.next,
+                  keyboardType: TextInputType.phone,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10.0),
-          TextField(
-            decoration: buildInputDecoration(Strings.phone),
-            textInputAction: TextInputAction.next,
-            keyboardType: TextInputType.phone,
+          ElevatedButton(
+            onPressed: showSignUpDialog,
+            child: const Text(Strings.signUp),
           ),
-          const SizedBox(height: 10.0),
         ],
       ),
     );
