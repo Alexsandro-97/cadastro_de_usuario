@@ -1,3 +1,4 @@
+import 'package:cadastro_de_usuario/components/contact_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:cadastro_de_usuario/resources/strings.dart';
 
@@ -14,8 +15,11 @@ class SignUp extends StatefulWidget {
 }
 
 class _SignUpState extends State<SignUp> {
-  bool obscureText = true;
   DateTime? selectedBirthDate;
+  bool obscureText = true;
+  bool emailChecked = true;
+  bool phoneChecked = true;
+  bool acceptedTerms = false;
 
   final birthDateController = TextEditingController();
 
@@ -81,6 +85,7 @@ class _SignUpState extends State<SignUp> {
       body: ListView(
         padding: const EdgeInsets.all(12.0),
         children: [
+          buildHeader(Strings.accessData),
           TextField(
             decoration: buildInputDecoration(Strings.userName),
             textInputAction: TextInputAction.next,
@@ -104,7 +109,8 @@ class _SignUpState extends State<SignUp> {
             textInputAction: TextInputAction.next,
             obscureText: obscureText,
           ),
-          const SizedBox(height: 10.0),
+          const SizedBox(height: 18.0),
+          buildHeader(Strings.personalInformation),
           TextField(
             decoration: buildInputDecoration(Strings.fullName),
             textInputAction: TextInputAction.next,
@@ -135,13 +141,47 @@ class _SignUpState extends State<SignUp> {
               ),
             ],
           ),
-          const SizedBox(height: 10.0),
+          const SizedBox(height: 18.0),
+          buildHeader(Strings.contactMessage),
+          ContactTile(
+            value: emailChecked,
+            onChanged: (value) => setState(() {
+              emailChecked = value!;
+            }),
+            contactTile: Strings.email,
+            contactIcon: Icons.email,
+          ),
+          ContactTile(
+            value: phoneChecked,
+            onChanged: (value) => setState(() {
+              phoneChecked = value!;
+            }),
+            contactTile: Strings.phone,
+            contactIcon: Icons.phone,
+          ),
+          SwitchListTile(
+              title: Text(
+                Strings.termsMessage,
+                style: theme.textTheme.subtitle2,
+              ),
+              contentPadding: const EdgeInsets.only(right: 8.0),
+              value: acceptedTerms,
+              onChanged: (value) => setState(() {
+                    acceptedTerms = value;
+                  })),
           ElevatedButton(
             onPressed: showSignUpDialog,
             child: const Text(Strings.signUp),
           ),
         ],
       ),
+    );
+  }
+
+  Padding buildHeader(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 18.0),
+      child: Text(text, style: Theme.of(context).textTheme.subtitle1),
     );
   }
 
