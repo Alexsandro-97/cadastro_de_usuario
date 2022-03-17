@@ -22,6 +22,7 @@ class _ContactTileState extends State<ContactTile> {
   @override
   Widget build(BuildContext context) {
     return CheckboxListTile(
+      dense: true,
       title: Text(widget.contactTile),
       secondary: Icon(widget.contactIcon),
       value: widget.value,
