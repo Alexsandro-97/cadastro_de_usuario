@@ -1,6 +1,8 @@
 import 'package:cadastro_de_usuario/components/contact_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:cadastro_de_usuario/resources/strings.dart';
+import 'package:flutter/services.dart';
+import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 
 class SignUp extends StatefulWidget {
   const SignUp({
@@ -20,6 +22,14 @@ class _SignUpState extends State<SignUp> {
   bool emailChecked = true;
   bool phoneChecked = true;
   bool acceptedTerms = false;
+
+  final emailRegex = RegExp(
+      r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?");
+
+  final phoneMask = MaskTextInputFormatter(
+    mask: '(##) #####-####',
+    filter: {'#': RegExp(r'[0-9]')},
+  );
 
   final birthDateFocusNode = FocusNode();
   final phoneFocusNode = FocusNode();
@@ -72,131 +82,195 @@ class _SignUpState extends State<SignUp> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: FocusScope.of(context).unfocus,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text(Strings.appName),
-          actions: [
-            IconButton(
-              onPressed: widget.onThemeModePressed,
-              icon: Icon(
-                theme.brightness == Brightness.light
-                    ? Icons.dark_mode
-                    : Icons.light_mode,
-              ),
-            ),
-          ],
-        ),
-        body: ListView(
-          padding: const EdgeInsets.all(12.0),
-          children: [
-            buildHeader(Strings.accessData),
-            TextField(
-              decoration: buildInputDecoration(Strings.userName),
-              textInputAction: TextInputAction.next,
-              autofocus: true,
-            ),
-            const SizedBox(height: 10.0),
-            TextField(
-              decoration: buildInputDecoration(Strings.email),
-              textInputAction: TextInputAction.next,
-              keyboardType: TextInputType.emailAddress,
-            ),
-            const SizedBox(height: 10.0),
-            TextField(
-              decoration: buildInputDecoration(Strings.password).copyWith(
-                  suffixIcon: ExcludeFocus(
-                child: IconButton(
-                  icon: Icon(
-                    obscureText ? Icons.visibility : Icons.visibility_off,
-                  ),
-                  onPressed: () => setState(() {
-                    obscureText = !obscureText;
-                  }),
+    return Form(
+      child: GestureDetector(
+        onTap: FocusScope.of(context).unfocus,
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text(Strings.appName),
+            actions: [
+              IconButton(
+                onPressed: widget.onThemeModePressed,
+                icon: Icon(
+                  theme.brightness == Brightness.light
+                      ? Icons.dark_mode
+                      : Icons.light_mode,
                 ),
-              )),
-              textInputAction: TextInputAction.next,
-              obscureText: obscureText,
-            ),
-            const SizedBox(height: 18.0),
-            buildHeader(Strings.personalInformation),
-            TextField(
-              decoration: buildInputDecoration(Strings.fullName),
-              textInputAction: TextInputAction.next,
-            ),
-            const SizedBox(height: 10.0),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 6,
-                  child: Focus(
-                    focusNode: birthDateFocusNode,
-                    descendantsAreFocusable: false,
-                    onFocusChange: (hasFocus) {
-                      if (hasFocus) {
-                        showBirthDatePicker();
-                      }
-                    },
-                    child: TextField(
-                      controller: birthDateController,
-                      readOnly: true,
-                      decoration: buildInputDecoration(Strings.birthDate),
-                      textInputAction: TextInputAction.next,
-                      keyboardType: TextInputType.number,
-                      onTap: showBirthDatePicker,
+              ),
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.all(12.0),
+            children: [
+              buildHeader(Strings.accessData),
+              TextFormField(
+                decoration: buildInputDecoration(Strings.userName),
+                textInputAction: TextInputAction.next,
+                autofocus: true,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: emptyValidator,
+              ),
+              const SizedBox(height: 10.0),
+              TextFormField(
+                decoration: buildInputDecoration(Strings.email),
+                textInputAction: TextInputAction.next,
+                keyboardType: TextInputType.emailAddress,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: emailValidator,
+              ),
+              const SizedBox(height: 10.0),
+              TextFormField(
+                decoration: buildInputDecoration(Strings.password).copyWith(
+                    helperText: Strings.passwordHelper,
+                    suffixIcon: ExcludeFocus(
+                      child: IconButton(
+                        icon: Icon(
+                          obscureText ? Icons.visibility : Icons.visibility_off,
+                        ),
+                        onPressed: () => setState(() {
+                          obscureText = !obscureText;
+                        }),
+                      ),
+                    )),
+                inputFormatters: [LengthLimitingTextInputFormatter(16)],
+                textInputAction: TextInputAction.next,
+                obscureText: obscureText,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: passwordValidator,
+              ),
+              const SizedBox(height: 18.0),
+              buildHeader(Strings.personalInformation),
+              TextFormField(
+                decoration: buildInputDecoration(Strings.fullName),
+                textInputAction: TextInputAction.next,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                validator: fullNameValidator,
+              ),
+              const SizedBox(height: 10.0),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 6,
+                    child: Focus(
+                      focusNode: birthDateFocusNode,
+                      descendantsAreFocusable: false,
+                      onFocusChange: (hasFocus) {
+                        if (hasFocus) {
+                          showBirthDatePicker();
+                        }
+                      },
+                      child: TextFormField(
+                        controller: birthDateController,
+                        readOnly: true,
+                        decoration: buildInputDecoration(Strings.birthDate),
+                        textInputAction: TextInputAction.next,
+                        keyboardType: TextInputType.number,
+                        onTap: showBirthDatePicker,
+                        validator: emptyValidator,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10.0),
-                Expanded(
-                  flex: 5,
-                  child: TextField(
-                    focusNode: phoneFocusNode,
-                    decoration: buildInputDecoration(Strings.phone),
-                    textInputAction: TextInputAction.next,
-                    keyboardType: TextInputType.phone,
+                  const SizedBox(width: 10.0),
+                  Expanded(
+                    flex: 5,
+                    child: TextFormField(
+                      focusNode: phoneFocusNode,
+                      decoration: buildInputDecoration(Strings.phone),
+                      textInputAction: TextInputAction.next,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [phoneMask],
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      validator: phoneValidator,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 18.0),
-            buildHeader(Strings.contactMessage),
-            ContactTile(
-              value: emailChecked,
-              onChanged: (value) => setState(() {
-                emailChecked = value!;
-              }),
-              contactTile: Strings.email,
-              contactIcon: Icons.email,
-            ),
-            ContactTile(
-              value: phoneChecked,
-              onChanged: (value) => setState(() {
-                phoneChecked = value!;
-              }),
-              contactTile: Strings.phone,
-              contactIcon: Icons.phone,
-            ),
-            SwitchListTile(
-                title: Text(
-                  Strings.termsMessage,
-                  style: theme.textTheme.subtitle2,
-                ),
-                contentPadding: const EdgeInsets.only(right: 8.0),
-                value: acceptedTerms,
+                ],
+              ),
+              const SizedBox(height: 18.0),
+              buildHeader(Strings.contactMessage),
+              ContactTile(
+                value: emailChecked,
                 onChanged: (value) => setState(() {
-                      acceptedTerms = value;
-                    })),
-            ElevatedButton(
-              onPressed: showSignUpDialog,
-              child: const Text(Strings.signUp),
-            ),
-          ],
+                  emailChecked = value!;
+                }),
+                contactTile: Strings.email,
+                contactIcon: Icons.email,
+              ),
+              ContactTile(
+                value: phoneChecked,
+                onChanged: (value) => setState(() {
+                  phoneChecked = value!;
+                }),
+                contactTile: Strings.phone,
+                contactIcon: Icons.phone,
+              ),
+              SwitchListTile(
+                  title: Text(
+                    Strings.termsMessage,
+                    style: theme.textTheme.subtitle2,
+                  ),
+                  contentPadding: const EdgeInsets.only(right: 8.0),
+                  value: acceptedTerms,
+                  onChanged: (value) => setState(() {
+                        acceptedTerms = value;
+                      })),
+              ElevatedButton(
+                onPressed: showSignUpDialog,
+                child: const Text(Strings.signUp),
+              ),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  String? phoneValidator(String? text) {
+    final emptyError = emptyValidator(text);
+    if (emptyError == null && text != null) {
+      final phoneDigits = phoneMask.unmaskText(text);
+      if (phoneDigits.length < 11) {
+        return Strings.errorMessageInvalidPhone;
+      }
+    }
+    return emptyError;
+  }
+
+  String? fullNameValidator(String? text) {
+    final emptyError = emptyValidator(text);
+    if (emptyError == null && text != null) {
+      if (text.split(' ').length == 1) {
+        return Strings.errorMessageInvalidFullName;
+      }
+    }
+    return emptyError;
+  }
+
+  String? passwordValidator(String? text) {
+    final emptyError = emptyValidator(text);
+    if (emptyError == null && text != null) {
+      if (text.length < 8) {
+        return Strings.passwordHelper;
+      }
+    }
+    return emptyError;
+  }
+
+  String? emailValidator(String? text) {
+    final emptyError = emptyValidator(text);
+    if (emptyError == null && text != null) {
+      if (!emailRegex.hasMatch(text)) {
+        return Strings.errorMessageInvalidEmail;
+      }
+    }
+    return emptyError;
+  }
+
+  String? emptyValidator(String? text) {
+    if (text == null || text.isEmpty) {
+      return Strings.errorMessageEmptyField;
+    }
+    return null;
   }
 
   @override
