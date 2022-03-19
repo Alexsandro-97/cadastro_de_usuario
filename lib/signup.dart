@@ -33,6 +33,7 @@ class _SignUpState extends State<SignUp> {
 
   final birthDateFocusNode = FocusNode();
   final phoneFocusNode = FocusNode();
+  final userNameFocusNode = FocusNode();
 
   final birthDateController = TextEditingController();
 
@@ -57,8 +58,8 @@ class _SignUpState extends State<SignUp> {
     birthDateFocusNode.unfocus();
   }
 
-  void showSignUpDialog() {
-    showDialog(
+  void showSignUpDialog(BuildContext context) {
+    showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -66,17 +67,30 @@ class _SignUpState extends State<SignUp> {
           content: const Text(Strings.confirmationMessage),
           actions: [
             TextButton(
-              onPressed: Navigator.of(context).pop,
+              onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Não'),
             ),
             TextButton(
-              onPressed: Navigator.of(context).pop,
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text('Sim'),
             ),
           ],
         );
       },
-    );
+    ).then((confirmedSignUp) {
+      if (confirmedSignUp != null && confirmedSignUp) {
+        emailChecked = true;
+        phoneChecked = true;
+        acceptedTerms = false;
+
+        Form.of(context)?.reset();
+        birthDateController.clear();
+        userNameFocusNode.requestFocus();
+
+        ScaffoldMessenger.of(context)
+            .showSnackBar(const SnackBar(content: Text(Strings.userSignedUp)));
+      }
+    });
   }
 
   @override
@@ -104,6 +118,7 @@ class _SignUpState extends State<SignUp> {
             children: [
               buildHeader(Strings.accessData),
               TextFormField(
+                focusNode: userNameFocusNode,
                 decoration: buildInputDecoration(Strings.userName),
                 textInputAction: TextInputAction.next,
                 autofocus: true,
@@ -167,6 +182,7 @@ class _SignUpState extends State<SignUp> {
                         textInputAction: TextInputAction.next,
                         keyboardType: TextInputType.number,
                         onTap: showBirthDatePicker,
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         validator: emptyValidator,
                       ),
                     ),
@@ -204,20 +220,40 @@ class _SignUpState extends State<SignUp> {
                 contactTile: Strings.phone,
                 contactIcon: Icons.phone,
               ),
-              SwitchListTile(
-                  title: Text(
-                    Strings.termsMessage,
-                    style: theme.textTheme.subtitle2,
-                  ),
-                  contentPadding: const EdgeInsets.only(right: 8.0),
-                  value: acceptedTerms,
-                  onChanged: (value) => setState(() {
-                        acceptedTerms = value;
-                      })),
-              ElevatedButton(
-                onPressed: showSignUpDialog,
-                child: const Text(Strings.signUp),
-              ),
+              FormField<bool>(validator: (_) {
+                if (!acceptedTerms) {
+                  return Strings.errorMessageNotAcceptedTerms;
+                }
+                return null;
+              }, builder: (formFieldState) {
+                final errorText = formFieldState.errorText;
+                return SwitchListTile(
+                    title: Text(
+                      Strings.termsMessage,
+                      style: theme.textTheme.subtitle2,
+                    ),
+                    subtitle: errorText != null
+                        ? Text(errorText,
+                            style: theme.textTheme.bodyText2
+                                ?.copyWith(color: theme.errorColor))
+                        : null,
+                    contentPadding: const EdgeInsets.only(right: 8.0),
+                    value: acceptedTerms,
+                    onChanged: (value) => setState(() {
+                          acceptedTerms = value;
+                        }));
+              }),
+              Builder(builder: (context) {
+                return ElevatedButton(
+                  onPressed: () {
+                    final formState = Form.of(context);
+                    if (formState != null && formState.validate()) {
+                      showSignUpDialog(context);
+                    }
+                  },
+                  child: const Text(Strings.signUp),
+                );
+              }),
             ],
           ),
         ),
@@ -277,6 +313,8 @@ class _SignUpState extends State<SignUp> {
   void dispose() {
     birthDateController.dispose();
     birthDateFocusNode.dispose();
+    userNameFocusNode.dispose();
+    phoneFocusNode.dispose();
     super.dispose();
   }
 
